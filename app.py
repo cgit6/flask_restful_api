@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask_smorest import Api
 from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate # 連接 alembic 與 flask 
 import os
 import secrets
 # 新的需求
@@ -29,13 +30,14 @@ def create_app(db_url =None):
     app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 
     # 使用 sqllite3 作為開發時的資料庫
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL","sqlite:///data.db")
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///data.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False 
     db.init_app(app) # 初始化 Flask SQLAlchemy
+    migrate = Migrate(app, db) # 使用flask migrate初始化資料庫
 
-    # 創建資料庫
-    with app.app_context():
-        db.create_all()
+    # 創建資料庫(為什麼要註解這個，因為如果不註解這個會導致migration 無法正常運作)
+    # with app.app_context():
+    #     db.create_all()
 
     api = Api(app)
     # app.config["JWT_SECRET_KEY"] = secrets.SystemRandom().getrandbits(128) # 用來驗證有沒有被串改過，通常會是一個很長的隨機字符串
@@ -50,9 +52,9 @@ def create_app(db_url =None):
     # 
     @jwt.revoked_token_loader
     def revoked_token_callback(jwt_header, jwt_payload):
-        return (jsonify({"description":"The token has been revoked","error":"token_revoked"}))
+        return (jsonify({"description":"token 已被撤銷","error":"token_revoked"}))
 
-
+    # 
     @jwt.needs_fresh_token_loader
     def token_not_fresh_callback(jwt_header, jwt_payload):
         return (

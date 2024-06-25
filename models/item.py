@@ -7,6 +7,8 @@ class ItemModel(db.Model):
     # db.Column 用於定義資料庫表，db.Integer 該列的資料型態是整數。
     id = db.Column(db.Integer, primary_key=True) # 每一筆資料的 id
     name = db.Column(db.String(80), nullable=False) # 如果這邊加上 unique=True 則可以有多個同名的 item
+
+    description = db.Column(db.String)
     price = db.Column(db.Float(precision=2), unique=False, nullable=False)
     
     # foreign key
