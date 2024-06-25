@@ -4,12 +4,18 @@ class ItemModel(db.Model):
 
     # __tablename__ 是什麼意思?
     __tablename__ = "items"
+    # db.Column 用於定義資料庫表，db.Integer 該列的資料型態是整數。
     id = db.Column(db.Integer, primary_key=True) # 每一筆資料的 id
     name = db.Column(db.String(80), nullable=False) # 如果這邊加上 unique=True 則可以有多個同名的 item
     price = db.Column(db.Float(precision=2), unique=False, nullable=False)
     
     # foreign key
     # 如果沒有對應的 store_id 則無法成功創建 item
+    # nullable=False 代表不能為 null
+    # db.ForeignKey 它是一個外鍵約束，用於建立資料庫表之間的關係。
+    # "stores.id" 指这个外键指向 stores 表的 id 列。
+    # unique=False 此屬性指定是否只需要保留該列的值。
+    # nullable=False 該屬性定義該列的值是否可以為NULL。
     store_id = db.Column(db.Integer, db.ForeignKey("stores.id"), unique=False, nullable=False)
     store = db.relationship("StoreModel", back_populates="items") # 🤔 解釋一下這是什麼意思
     # 沒有一個模型添加了tag id或item id, 這兩個模型都將通過item_tags

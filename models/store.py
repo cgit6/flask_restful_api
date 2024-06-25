@@ -14,3 +14,6 @@ class StoreModel(db.Model):
 
 # 如果刪除已經存在的 store 那 store 中的item 會出現 name 中的 nullable=False 被違反
 # 解決方案是如果刪除了 store 時，裡面的item 也會一併刪除 => 用 cascade="all, delete, delete-orphan" 處理
+
+
+# 如果沒有  lazy="dynamic" 則每次 fetch 時 items、tags 都會返回

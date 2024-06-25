@@ -1,6 +1,8 @@
 from flask import Flask, request
 from flask_smorest import Api
+from flask_jwt_extended import JWTManager
 import os
+import secrets
 # 新的需求
 from db import db
 import models
@@ -9,7 +11,7 @@ import models
 from resources.item import blp as ItemBlueprint 
 from resources.store import blp as StoreBlueprint
 from resources.tag import blp as TagBlueprint
-
+from resources.user import blp as UserBlueprint
 def create_app(db_url =None):
 
     app = Flask(__name__)
@@ -34,9 +36,14 @@ def create_app(db_url =None):
         db.create_all()
 
     api = Api(app)
+    # app.config["JWT_SECRET_KEY"] = secrets.SystemRandom().getrandbits(128) # 用來驗證有沒有被串改過，通常會是一個很長的隨機字符串
+    app.config["JWT_SECRET_KEY"] = "25339446708963499269000046428341264752"# 通常不會希望使用浮動的隨機字符串所以就是生成一個固定使用
+    jwt = JWTManager(app)
+
     api.register_blueprint(ItemBlueprint)
     api.register_blueprint (StoreBlueprint)
     api.register_blueprint(TagBlueprint)
+    api.register_blueprint(UserBlueprint)
     
     return app
 

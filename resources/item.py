@@ -44,7 +44,7 @@ class ItemList(MethodView):
         return item
 
 # 對特定物品做什麼?
-@blp.route("/item/<string:item_id>")
+@blp.route("/item/<int:item_id>")
 class Item(MethodView):
     # 取得
     @blp.response(200, ItemSchema)
@@ -58,6 +58,7 @@ class Item(MethodView):
         return item
     
     # 刪除 item
+    # 比如說 url/item/1 然後就會 item_id 為 1 的資料
     def delete(self, item_id):
         # try:
         #     del items[item_id]
@@ -65,8 +66,8 @@ class Item(MethodView):
         # except KeyError:
         #     abort(404, message="Item not found.")
         item = ItemModel.query.get_or_404(item_id)
-        db.session.delete(item)
-        db.session.commit()
+        db.session.delete(item) # 刪除資料
+        db.session.commit() # 更新資料庫
         return {"message": "Item deleted."}
 
 

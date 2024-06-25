@@ -48,7 +48,7 @@ class ItemUpdateSchema(Schema):
     store_id = fields.Int()
 
 # =======================================================================
-
+# tag 格式需要 store_id、store、items
 class TagSchema(PlainTagSchema):
     store_id = fields.Int(load_only=True)
     store = fields.Nested(PlainStoreSchema(), dump_only=True)
@@ -59,6 +59,12 @@ class TagAndItemSchema(Schema):
     message = fields.Str()
     item = fields.Nested(ItemSchema)
     tag = fields.Nested(TagSchema)
+
+
+class UserSchema(Schema):
+    id = fields.Int(dump_only=True)
+    username = fields.Str(required=True)
+    password = fields.Str(required=True, load_only=True)
 
 # 當你在 `marshmallow` 的 `Schema` 定義中使用 `dump_only=True` 這個選項時，這意味著指定的字段只在序列化（即將數據對象轉換為可傳遞或存儲的格式，如 JSON）時包括，並不在反序列化（即將接收到的數據如 JSON 轉換回 Python 對象）時處理。
 

@@ -49,7 +49,7 @@ class StoreList(MethodView):
 
 
 # 
-@blp.route("/store/<string:store_id>")
+@blp.route("/store/<int:store_id>")
 class Store(MethodView):
     @blp.response(200, StoreSchema) 
     def get(self, store_id):
@@ -72,7 +72,7 @@ class Store(MethodView):
         # except KeyError:
         #     abort(404, message="Store not found.")
 
-        store = StoreModel.query.get_or_404(store_id)
-        db.session.delete(store)
-        db.session.commit()
+        store = StoreModel.query.get_or_404(store_id) # 查詢資料
+        db.session.delete(store) # 刪除資料
+        db.session.commit() # 更新資料庫
         return {"message": "Store deleted"}
