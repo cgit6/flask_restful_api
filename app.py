@@ -36,8 +36,9 @@ def create_app(db_url =None):
     migrate = Migrate(app, db) # 使用flask migrate初始化資料庫
 
     # 創建資料庫(為什麼要註解這個，因為如果不註解這個會導致migration 無法正常運作)
-    # with app.app_context():
-    #     db.create_all()
+    # 部署的時候會用上?
+    with app.app_context():
+        db.create_all()
 
     api = Api(app)
     # app.config["JWT_SECRET_KEY"] = secrets.SystemRandom().getrandbits(128) # 用來驗證有沒有被串改過，通常會是一個很長的隨機字符串
