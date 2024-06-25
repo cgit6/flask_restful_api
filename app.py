@@ -1,10 +1,12 @@
-from flask import Flask, request
+from flask import Flask, jsonify
 from flask_smorest import Api
 from flask_jwt_extended import JWTManager
 import os
 import secrets
 # 新的需求
 from db import db
+
+from blocklist import BOLCKLIST
 import models
 
 # 路徑管理
@@ -39,6 +41,60 @@ def create_app(db_url =None):
     # app.config["JWT_SECRET_KEY"] = secrets.SystemRandom().getrandbits(128) # 用來驗證有沒有被串改過，通常會是一個很長的隨機字符串
     app.config["JWT_SECRET_KEY"] = "25339446708963499269000046428341264752"# 通常不會希望使用浮動的隨機字符串所以就是生成一個固定使用
     jwt = JWTManager(app)
+
+    # 如果 token 在 blocklist 中，說明 token 已經被撤銷或不可用了
+    @jwt.token_in_blocklist_loader
+    def check_if_token_in_blocklist(jwt_header, jwt_payload):
+        return jwt_payload["jti"] in BLOCKLIST
+    
+    @jwt.revoked_token_loader
+    def revoked_token_callback(jwt_header, jwt_payload):
+        return (jsonify({"description":"The token has been revoked","error":"token_revoked"}))
+
+
+    # 這裡使用到 jwt claims 的東西
+    # admin方法1:是否為管理員
+    @jwt.additional_claims_loader 
+    def add_claims_to_jwt(identity): 
+        # 查看資料庫，看看該使用者是否為管理員
+        if identity == 1:
+            return {"is_admiin":True}
+        return {"is_admiin":False}
+
+    # jwt 過期時返回的內容
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return (
+            jsonify(
+                {"message": "The token has expired.", "error": "token_expired"}
+                ),
+            401,
+        )
+    
+    # 驗證失敗
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error):
+        return (
+            jsonify(
+                {"message": "簽名認證失敗", "error": "invalid_token"}
+            ),
+            401,
+        )
+
+    # 如果缺少 token 則會返回的內容
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        return (
+            jsonify(
+                {
+                    "description": "請求不包含存取令牌",
+                    "error": "authorization_required",
+                }
+            ),
+            401,
+        )
+
+
 
     api.register_blueprint(ItemBlueprint)
     api.register_blueprint (StoreBlueprint)

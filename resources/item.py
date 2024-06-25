@@ -1,8 +1,8 @@
-import uuid
-from flask import request
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort # Blueprint一種
+from flask_jwt_extended import jwt_required, get_jwt #
 from sqlalchemy.exc import SQLAlchemyError # 錯誤處理
+
 
 from db import db
 from models import ItemModel
@@ -12,12 +12,14 @@ blp = Blueprint("Items", __name__, description="Operations on items")
 
 @blp.route("/item")
 class ItemList(MethodView):
+    @jwt_required()
     @blp.response(200, ItemSchema(many=True)) # 🤔 這句話再說什麼?以 JSON 列表的形式返回。
     def get(self):
         return ItemModel.query.all()
     
     # 任務 :向特定 id 添加(post)新的 item
     # 期望的資料格式是什麼?
+    @jwt_required()
     @blp.arguments(ItemSchema) # 用於檢查資料格式
     @blp.response(201, ItemSchema)
     def post(self, item_data):
@@ -47,6 +49,7 @@ class ItemList(MethodView):
 @blp.route("/item/<int:item_id>")
 class Item(MethodView):
     # 取得
+    @jwt_required()
     @blp.response(200, ItemSchema)
     def get(self, item_id):
         # try:
@@ -59,12 +62,19 @@ class Item(MethodView):
     
     # 刪除 item
     # 比如說 url/item/1 然後就會 item_id 為 1 的資料
+    @jwt_required()
     def delete(self, item_id):
         # try:
         #     del items[item_id]
         #     return {"message": "Item deleted."}
         # except KeyError:
         #     abort(404, message="Item not found.")
+        
+        # admin方法2:
+        jwt = get_jwt() # 應該會返回 bool
+        if not jwt.get("is_admin"):
+            abort(401, messsage="需要管理員權限")
+
         item = ItemModel.query.get_or_404(item_id)
         db.session.delete(item) # 刪除資料
         db.session.commit() # 更新資料庫

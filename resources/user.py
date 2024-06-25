@@ -2,6 +2,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from passlib.hash import pbkdf2_sha256 # 哈希客戶端發送給我們的密碼
+from flask_jwt_extended import create_access_token # 生成jwt token
 
 from db import db
 from models import UserModel
