@@ -2,8 +2,10 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from passlib.hash import pbkdf2_sha256 # 哈希客戶端發送給我們的密碼
-from flask_jwt_extended import create_access_token # 生成jwt token
+# create_access_token:生成jwt token
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required, get_jwt
 
+from blocklist import BLOCKLIST
 from db import db
 from models import UserModel
 from schemas import UserSchema
@@ -45,11 +47,37 @@ class UserLogin(MethodView):
         # server 檢查收到的請求是否與資料庫一致
         if user and pbkdf2_sha256.verify(user_data["password"], user.password):
             # 建立 jwt token
-            access_token = create_access_token(identity=user.id)
+            access_token = create_access_token(identity=user.id, fresh=True)
+            # refresh: 用途是為了授權安全級別更高的操作
+            refresh_token = create_refresh_token(identity=user.id)
             # 返回 token 到 client
-            return {"access_token":access_token}
+            return {"access_token":access_token, "refresh_token":refresh_token}
         
         abort(401, message="無效驗證")
+
+# 刷新 token
+# 每次access_token過期時, 用戶端都可以使用/refresh端點產生新的access_token｡
+# 如果您希望設定refresh token 的使用次數限制, 或希望refresh token到期後不能再次使用,
+# 則可以設定刷新令牌的到期時間, 也可以將刷新令牌加入到BLOCKLIST中｡
+@blp.route("/refresh")
+class TokenRefresh(MethodView):
+    @jwt_required(refresh=True)
+    def post(self):
+        current_user = get_jwt_identity()
+        new_token = create_access_token(identity=current_user, fresh=False)
+        jti = get_jwt()["jti"]
+        BLOCKLIST.add(jti) 
+        return {"access_token":new_token}
+
+
+# 登出
+@blp.route("/logout")
+class UserLogout(MethodView):
+    @jwt_required() # 檢查
+    def post(self):
+        jti = get_jwt()["jti"]
+        BLOCKLIST.add(jti) # 加入封鎖名單中
+        return {"message": "成功退出"}
 
 
 
@@ -64,4 +92,4 @@ class User(MethodView):
         user = UserModel.query.get_or_404(user_id)
         db.session.delete(user)
         db.session.commit()
-        return {"message": "User deleted."}, 200
+        return {"message": "用戶已刪除"}, 200

@@ -6,7 +6,7 @@ import secrets
 # 新的需求
 from db import db
 
-from blocklist import BOLCKLIST
+from blocklist import BLOCKLIST # 登出後會用到
 import models
 
 # 路徑管理
@@ -47,10 +47,23 @@ def create_app(db_url =None):
     def check_if_token_in_blocklist(jwt_header, jwt_payload):
         return jwt_payload["jti"] in BLOCKLIST
     
+    # 
     @jwt.revoked_token_loader
     def revoked_token_callback(jwt_header, jwt_payload):
         return (jsonify({"description":"The token has been revoked","error":"token_revoked"}))
 
+
+    @jwt.needs_fresh_token_loader
+    def token_not_fresh_callback(jwt_header, jwt_payload):
+        return (
+            jsonify(
+                {
+                    "description": "The token is not fresh.",
+                    "error": "fresh_token_required",
+                }
+            ),
+            401,
+        )
 
     # 這裡使用到 jwt claims 的東西
     # admin方法1:是否為管理員
