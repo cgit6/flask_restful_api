@@ -1,13 +1,25 @@
 # 指定了使用 Docker Compose 檔案格式的版本
-version: "3"
 services:
   # 服務名稱
   web:
     build: . # 當前位置
     ports:
-      - "5000:5000"
+      - "5000:80"
     volumes:
       - .:/app # 🤔這行設定了一個卷映射
-
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=myapp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:
 # 執行命令
 # docker compose up
+
