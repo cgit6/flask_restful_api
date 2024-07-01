@@ -7,8 +7,8 @@ import secrets
 # 新的需求
 from db import db
 
-from blocklist import BLOCKLIST # 登出後會用到
-import models
+from blocklist import BLOCKLIST # 封鎖名單:登出後會用到
+import models # 處理數據的
 
 # 路徑管理
 from resources.item import blp as ItemBlueprint 
@@ -32,14 +32,17 @@ def create_app(db_url =None):
     # 使用 sqllite3 作為開發時的資料庫
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///data.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False 
-    db.init_app(app) # 初始化 Flask SQLAlchemy
-    migrate = Migrate(app, db) # 使用flask migrate初始化資料庫
+    # 初始化 Flask SQLAlchemy
+    db.init_app(app) 
+    # 使用 flask migrate 初始化資料庫
+    migrate = Migrate(app, db) 
 
     # 創建資料庫(為什麼要註解這個，因為如果不註解這個會導致migration 無法正常運作)
     # 部署的時候會用上?
     with app.app_context():
         db.create_all()
-
+    
+    # 
     api = Api(app)
     # app.config["JWT_SECRET_KEY"] = secrets.SystemRandom().getrandbits(128) # 用來驗證有沒有被串改過，通常會是一個很長的隨機字符串
     app.config["JWT_SECRET_KEY"] = "25339446708963499269000046428341264752"# 通常不會希望使用浮動的隨機字符串所以就是生成一個固定使用
