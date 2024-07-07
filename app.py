@@ -8,13 +8,14 @@ import secrets
 from db import db
 
 from blocklist import BLOCKLIST # 封鎖名單:登出後會用到
-import models # 處理數據的
+# import models # 處理數據的
 
 # 路徑管理
 from resources.item import blp as ItemBlueprint 
 from resources.store import blp as StoreBlueprint
 from resources.tag import blp as TagBlueprint
 from resources.user import blp as UserBlueprint
+
 def create_app(db_url =None):
 
     app = Flask(__name__)
@@ -32,6 +33,8 @@ def create_app(db_url =None):
     # 使用 sqllite3 作為開發時的資料庫
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///data.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False 
+    
+    
     # 初始化 Flask SQLAlchemy
     db.init_app(app) 
     # 使用 flask migrate 初始化資料庫
